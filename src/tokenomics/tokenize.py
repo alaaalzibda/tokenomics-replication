@@ -56,9 +56,22 @@ def get_tokenizer(kind: str = "auto") -> Tokenizer:
         return TiktokenTokenizer(enc)
     if kind == "heuristic":
         return HeuristicTokenizer()
+    if kind == "strict":
+        # Never silently degrade: used for anything that will be published.
+        return TiktokenTokenizer()
     if kind == "auto":
         try:
             return TiktokenTokenizer()
-        except Exception:
+        except Exception as exc:
+            import sys
+            print(
+                "\n*** TOKENIZER FALLBACK ***\n"
+                f"tiktoken unavailable ({type(exc).__name__}: {str(exc)[:90]}).\n"
+                "Falling back to a word-split heuristic. Shares remain internally\n"
+                "consistent, but DO NOT PUBLISH these numbers. tiktoken downloads\n"
+                "its encoding on first use, so this usually means no network.\n"
+                "Re-run with --tokenizer strict once it can reach the internet.\n",
+                file=sys.stderr,
+            )
             return HeuristicTokenizer()
     raise ValueError(f"unknown tokenizer {kind!r}")

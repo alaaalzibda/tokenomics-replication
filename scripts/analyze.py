@@ -83,7 +83,8 @@ def report(path: str, tokenizer: str, basis: str, compare_paper: bool) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("traces", nargs="+")
-    ap.add_argument("--tokenizer", default="auto")
+    ap.add_argument("--tokenizer", default="auto",
+                    help="auto | strict | heuristic | tiktoken:<enc>. Use strict for anything you publish.")
     ap.add_argument("--basis", default="billable", choices=["billable", "total"])
     ap.add_argument("--compare-paper", action="store_true")
     args = ap.parse_args()

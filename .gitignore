@@ -4,10 +4,15 @@ __pycache__/
 venv/
 .env
 *.egg-info/
-data/traces/*.jsonl
-!data/traces/sample_*.jsonl
-results/*.png
-results/*.csv
-.DS_Store
-__pycache__/
 .pytest_cache/
+.DS_Store
+
+# Vendored ChatDev 1.x: we keep the source that actually runs (camel/, chatdev/,
+# CompanyConfig/, run.py ~ 340KB) so this study stays reproducible even if the
+# upstream fork disappears -- which is exactly what happened to ChatDev 1.x in
+# the official repository. Everything below is demo output and web assets.
+vendor/ChatDev1x/.git/
+vendor/ChatDev1x/WareHouse/
+vendor/ChatDev1x/misc/
+vendor/ChatDev1x/online_log/static/
+vendor/ChatDev1x/online_log/*.log
