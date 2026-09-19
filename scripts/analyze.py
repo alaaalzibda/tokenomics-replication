@@ -12,7 +12,7 @@ from tokenomics.aggregate import (  # noqa: E402
     stage_shares, type_shares, stage_type_shares, calls_per_stage,
 )
 from tokenomics.phases import PAPER_STAGE_SHARE, PAPER_TYPE_SHARE  # noqa: E402
-from tokenomics.redundancy import analyse_run  # noqa: E402
+from tokenomics.shingle import analyse_run, summarise, window_sensitivity  # noqa: E402
 from tokenomics.tokenize import get_tokenizer  # noqa: E402
 from tokenomics.trace import group_by_run, read_trace  # noqa: E402
 
@@ -60,23 +60,23 @@ def report(path: str, tokenizer: str, basis: str, compare_paper: bool) -> dict:
 
     hr("CONTEXT REDUNDANCY  (the part that is not a replication)")
     tok = get_tokenizer(tokenizer)
-    results = [analyse_run(calls, tokenizer=tok) for _, calls in group_by_run(records)]
-    print(f"tokenizer = {tok.name}\n")
-    print(f"{'run':<24}{'exact':>9}{'near':>9}{'cacheable':>11}{'uncacheable':>13}")
+    runs = list(group_by_run(records))
+    results = [analyse_run(calls, tokenizer=tok) for _, calls in runs]
+    print(f"tokenizer = {tok.name}   window = {results[0].window} tokens\n")
+    print(f"{'run':<26}{'redundant':>11}{'cacheable':>11}{'UNCACHEABLE':>13}")
     for r in results:
-        print(f"{r.run_id:<24}{r.exact_redundancy*100:8.1f}%{r.near_redundancy*100:8.1f}%"
-              f"{r.cacheable_redundancy*100:10.1f}%{r.uncacheable_redundancy*100:12.1f}%")
-    summary = {
-        "model": model,
-        "exact": mean(r.exact_redundancy for r in results),
-        "near": mean(r.near_redundancy for r in results),
-        "cacheable": mean(r.cacheable_redundancy for r in results),
-        "uncacheable": mean(r.uncacheable_redundancy for r in results),
-        "input_share": ts["input"],
-    }
-    print("-" * 66)
-    print(f"{'MEAN':<24}{summary['exact']*100:8.1f}%{summary['near']*100:8.1f}%"
-          f"{summary['cacheable']*100:10.1f}%{summary['uncacheable']*100:12.1f}%")
+        print(f"{r.run_id:<26}{r.redundancy*100:10.1f}%{r.cacheable*100:10.1f}%"
+              f"{r.uncacheable*100:12.1f}%")
+    agg = summarise(results)
+    print("-" * 61)
+    print(f"{'MEAN':<26}{agg['redundancy']*100:10.1f}%{agg['cacheable']*100:10.1f}%"
+          f"{agg['uncacheable']*100:12.1f}%")
+
+    hr("Window sensitivity (redundancy vs k, first run)")
+    for w, v in window_sensitivity(runs[0][1], tokenizer=tok).items():
+        print(f"  k={w:<5}{v*100:6.1f}%")
+
+    summary = {"model": model, "input_share": ts["input"], **agg}
     return summary
 
 
@@ -94,10 +94,10 @@ def main() -> None:
         print("\n" + "=" * 68)
         print("CROSS-MODEL COMPARISON  (input+output basis)")
         print("=" * 68)
-        print(f"{'model':<26}{'input%':>9}{'exact':>9}{'near':>9}{'cacheable':>11}")
+        print(f"{'model':<26}{'input%':>9}{'redundant':>11}{'cacheable':>11}{'UNCACHEABLE':>13}")
         for s in summaries:
-            print(f"{s['model']:<26}{s['input_share']*100:8.1f}%{s['exact']*100:8.1f}%"
-                  f"{s['near']*100:8.1f}%{s['cacheable']*100:10.1f}%")
+            print(f"{s['model']:<26}{s['input_share']*100:8.1f}%{s['redundancy']*100:10.1f}%"
+                  f"{s['cacheable']*100:10.1f}%{s['uncacheable']*100:12.1f}%")
         print("\nNOTE: different tokenizers -> compare shares only, never raw counts.")
 
 

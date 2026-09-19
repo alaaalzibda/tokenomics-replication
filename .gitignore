@@ -9,3 +9,5 @@ data/traces/*.jsonl
 results/*.png
 results/*.csv
 .DS_Store
+__pycache__/
+.pytest_cache/
