@@ -1,0 +1,2 @@
+# No external dependencies are required; the app uses only Python's standard library.
+# GUI uses tkinter (bundled with Python). Ensure Tcl/Tk is available on your system.

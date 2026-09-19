@@ -1,0 +1,104 @@
+'''
+CSS styles for the Strands puzzle web UI, including layout and color themes.
+Colors:
+- Themed words: blue (#64b5f6)
+- Spangram: yellow (#ffd54f)
+- Temporary selection: teal (#b2dfdb)
+- Non-theme (flash): light green (#c5e1a5)
+- Invalid (flash): light red (#ffcdd2)
+'''
+/* The docstring above is embedded inside this CSS comment block for safety. */
+:root {
+  --bg: #fafafa;
+  --cell-bg: #ffffff;
+  --cell-border: #cccccc;
+  --cell-text: #333333;
+  --temp: #b2dfdb;
+  --theme: #64b5f6;
+  --spangram: #ffd54f;
+  --invalid: #ffcdd2;
+  --non-theme: #c5e1a5;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--cell-text);
+}
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.theme {
+  text-align: center;
+  margin: 12px 0 8px 0;
+  font-size: 20px;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 56px);
+  grid-template-rows: repeat(6, 56px);
+  gap: 6px;
+  justify-content: center;
+  margin: 12px 0 12px 0;
+}
+.cell {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--cell-border);
+  background: var(--cell-bg);
+  color: var(--cell-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+  user-select: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.05s ease;
+}
+.cell.temp {
+  background: var(--temp);
+}
+.cell.claimed-theme {
+  background: var(--theme);
+  color: #000;
+}
+.cell.claimed-spangram {
+  background: var(--spangram);
+  color: #000;
+}
+.cell.flash-invalid {
+  background: var(--invalid) !important;
+}
+.cell.flash-non-theme {
+  background: var(--non-theme) !important;
+}
+.status {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin: 8px 0;
+}
+.controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  background: #eeeeee;
+  border: 1px solid #cccccc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #e2e2e2;
+}

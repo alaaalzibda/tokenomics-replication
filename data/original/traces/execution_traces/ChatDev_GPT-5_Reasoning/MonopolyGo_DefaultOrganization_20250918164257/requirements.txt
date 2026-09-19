@@ -1,0 +1,4 @@
+# This project uses only the Python standard library (including tkinter).
+# No third-party pip packages are required.
+# If tkinter is missing, install your OS package (e.g., 'sudo apt-get install python3-tk' on Debian/Ubuntu).
+dataclasses; python_version < '3.7'

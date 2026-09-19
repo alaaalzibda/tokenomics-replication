@@ -1,0 +1,77 @@
+<!--
+Main HTML template for the Strands puzzle website.
+Provides a draggable UI for assembling strands into valid words/phrases,
+buttons for actions, and areas for feedback and progress.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Strands - Word Segmentation Puzzle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="/static/css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>Strands</h1>
+      <div class="header-actions">
+        <button id="btn-new" type="button">New Puzzle</button>
+        <select id="puzzle-select" title="Choose a puzzle" aria-label="Choose a puzzle">
+          <option value="">Random</option>
+          <option value="fruits1">Fruits</option>
+          <option value="cafe1">Cafe Menu</option>
+          <option value="tech1">Tech Buzzwords</option>
+        </select>
+        <button id="btn-load" type="button">Load</button>
+      </div>
+    </header>
+    <section class="info">
+      <div class="theme">
+        Theme: <span id="theme">-</span>
+      </div>
+      <div class="progress">
+        Found: <span id="found-count">0</span>/<span id="total-count">0</span>
+      </div>
+    </section>
+    <main class="main">
+      <section class="board" aria-labelledby="bag-title">
+        <h2 id="bag-title">Strand Bag</h2>
+        <div id="bag" class="bag" aria-label="Available strands"></div>
+        <div class="bag-actions">
+          <button id="btn-shuffle" type="button">Shuffle</button>
+          <button id="btn-reset" type="button">Restart</button>
+        </div>
+        <h2>Assemble</h2>
+        <div id="assemble" class="assemble" aria-label="Drop strands here"></div>
+        <div class="assemble-actions">
+          <button id="btn-undo" type="button">Undo</button>
+          <button id="btn-clear" type="button">Clear</button>
+          <button id="btn-submit" class="primary" type="button">Submit Merge</button>
+        </div>
+        <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+      </section>
+      <aside class="sidebar">
+        <h2>Found Phrases</h2>
+        <ul id="found-list" class="found-list"></ul>
+        <div id="complete" class="complete hidden">Puzzle Complete! 🎉</div>
+        <div class="tips">
+          <h3>How to Play</h3>
+          <ul>
+            <li>Drag strands from the bag to the assemble area.</li>
+            <li>Order matters. Submit to check your merge.</li>
+            <li>Correct merges are removed and added to "Found".</li>
+            <li>Partial merges get hints to guide you.</li>
+          </ul>
+          <p class="note">Matching ignores spaces and punctuation.</p>
+        </div>
+      </aside>
+    </main>
+    <footer class="footer">
+      <span>© ChatDev - Strands</span>
+      <a href="https://www.nytimes.com/games/strands" target="_blank" rel="noopener">Inspired by NYT Strands</a>
+    </footer>
+  </div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

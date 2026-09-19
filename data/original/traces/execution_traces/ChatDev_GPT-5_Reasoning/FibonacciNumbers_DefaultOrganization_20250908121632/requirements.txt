@@ -1,0 +1,2 @@
+# No external pip packages required. Uses only the Python standard library (tkinter).
+# Note: On some systems you may need to install the OS package providing Tk (e.g., python3-tk).

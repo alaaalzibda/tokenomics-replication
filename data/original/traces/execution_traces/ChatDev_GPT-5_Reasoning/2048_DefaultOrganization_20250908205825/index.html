@@ -1,0 +1,46 @@
+'''
+Main HTML page for the 2048 web app. Renders the grid container and loads CSS/JS assets.
+'''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>2048 Game (Python/Flask)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>2048</h1>
+      <div class="scores">
+        <div class="score-box">
+          <div class="label">Score</div>
+          <div id="score" class="value">0</div>
+        </div>
+        <div class="score-box">
+          <div class="label">Max</div>
+          <div id="max-tile" class="value">0</div>
+        </div>
+      </div>
+    </header>
+    <div class="controls">
+      <button id="new-game" class="btn">New Game</button>
+      <div class="hint">Use arrow keys to play.</div>
+    </div>
+    <div class="board-wrapper">
+      <div id="board" class="board"></div>
+      <div id="overlay" class="overlay hidden">
+        <div class="overlay-content">
+          <div class="over-text">Game Over!</div>
+          <button id="try-again" class="btn">Try Again</button>
+        </div>
+      </div>
+    </div>
+    <footer class="footer">
+      <div>Powered by Python Flask. All game rules implemented server-side.</div>
+    </footer>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

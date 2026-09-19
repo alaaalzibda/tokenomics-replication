@@ -1,0 +1,8 @@
+# No third-party Python packages required.
+# The project uses only the Python standard library.
+
+# Note: Ensure Tkinter (tk) is available in your Python installation.
+# On some systems, you may need to install an OS package, e.g.:
+# - Debian/Ubuntu: sudo apt-get install python3-tk
+# - Fedora: sudo dnf install python3-tkinter
+# - macOS: install Python with Tk support (e.g., via python.org installer)

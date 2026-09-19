@@ -1,0 +1,117 @@
+'''
+Stylesheet for Match-3 game UI and candy visuals.
+'''
+:root {
+  --bg: #0f1226;
+  --panel: #171a33;
+  --accent: #6c6ff8;
+  --accent-2: #67e3f7;
+  --text: #e9ecff;
+  --muted: #9aa3c8;
+  --tile-size: 64px;
+  --gap: 6px;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html, body {
+  height: 100%;
+  margin: 0;
+  background: radial-gradient(1200px 600px at 80% 0%, rgba(103,227,247,0.08), transparent 40%),
+              radial-gradient(800px 800px at 10% 10%, rgba(108,111,248,0.08), transparent 30%),
+              var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; background: linear-gradient(180deg, #171a33, #131633);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: sticky; top: 0; z-index: 2;
+}
+.app-header h1 {
+  margin: 0; font-weight: 800; letter-spacing: 0.5px; font-size: 22px;
+}
+.controls { display: flex; gap: 16px; align-items: center; }
+.mode { display: flex; gap: 8px; }
+.mode label { cursor: pointer; color: var(--muted); }
+.mode input { margin-right: 4px; }
+.hud { display: flex; gap: 14px; align-items: center; }
+.stat { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; border-radius: 8px; text-align: center; min-width: 80px; }
+.stat span { display: block; font-weight: 800; font-size: 18px; }
+.stat small { display: block; color: var(--muted); font-size: 12px; }
+.actions { display: flex; gap: 10px; }
+button {
+  border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  color: white; font-weight: 600; letter-spacing: 0.3px;
+  transition: transform 0.05s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+button.primary { background: linear-gradient(135deg, var(--accent), #4c4ff3); }
+button.secondary { background: linear-gradient(135deg, #2a2e5e, #232654); }
+button:hover { transform: translateY(-1px); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+main {
+  max-width: 900px; margin: 24px auto; padding: 12px; position: relative;
+}
+.message {
+  min-height: 22px; text-align: center; color: var(--muted); margin-bottom: 8px;
+}
+.board {
+  width: max-content; margin: 10px auto; padding: 10px; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+  display: grid; gap: var(--gap);
+}
+.tile {
+  width: var(--tile-size); height: var(--tile-size);
+  border-radius: var(--radius);
+  display: grid; place-items: center;
+  font-weight: 700; color: rgba(255,255,255,0.9);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.1) inset, 0 8px 16px rgba(0,0,0,0.2);
+  user-select: none; cursor: pointer; position: relative; overflow: hidden;
+  transition: transform 100ms ease, filter 150ms ease;
+}
+.tile:active { transform: scale(0.98); }
+.tile.selected {
+  outline: 3px solid rgba(255,255,255,0.85);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.2), 0 8px 16px rgba(0,0,0,0.35);
+}
+.tile.invalid {
+  animation: shake 200ms ease-in-out;
+}
+@keyframes shake {
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.tile.clearing::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.9), rgba(255,255,255,0.1) 60%, transparent 70%);
+  animation: pop 300ms ease forwards;
+}
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+.hidden { display: none !important; }
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: grid; place-items: center; z-index: 3;
+}
+.overlay-content {
+  background: var(--panel); border: 1px solid rgba(255,255,255,0.1); padding: 24px; border-radius: 12px;
+  text-align: center; width: min(90vw, 420px);
+}
+.app-footer {
+  text-align: center; color: var(--muted); padding: 20px 10px;
+}
+/* Candy colors */
+.candy-0 { background: linear-gradient(145deg, #ff7a7a, #ff3d3d); }
+.candy-1 { background: linear-gradient(145deg, #ffd56c, #ffb400); }
+.candy-2 { background: linear-gradient(145deg, #6ee7b7, #10b981); }
+.candy-3 { background: linear-gradient(145deg, #67e3f7, #22c7e6); }
+.candy-4 { background: linear-gradient(145deg, #a78bfa, #7c3aed); }
+.candy-5 { background: linear-gradient(145deg, #f472b6, #ec4899); }
+/* Responsive sizing */
+@media (max-width: 600px) {
+  :root { --tile-size: 48px; --gap: 5px; }
+}

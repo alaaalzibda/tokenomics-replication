@@ -1,0 +1,45 @@
+'''
+Main HTML template for the Sudoku game UI. Injects the current puzzle and givens
+from the server into the page and loads the frontend scripts and styles.
+'''
+<!--
+'''
+Main HTML template for the Sudoku game UI. Injects the current puzzle and givens
+from the server into the page and loads the frontend scripts and styles.
+'''
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sudoku - ChatDev</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>Sudoku</h1>
+      <p class="subtitle">Fill each row, column, and 3x3 box with digits 1 through 9 exactly once.</p>
+    </header>
+    <main>
+      <div id="board-container"></div>
+      <div class="controls">
+        <button id="btn-new">New Game</button>
+        <button id="btn-check">Check Mistakes</button>
+        <button id="btn-validate">Validate Completed</button>
+      </div>
+      <div id="message" class="message"></div>
+    </main>
+    <footer>
+      <span>Built by ChatDev</span>
+    </footer>
+  </div>
+  <script>
+    // Inject puzzle and givens from server
+    window.SUDOKU_PUZZLE = {{ puzzle|tojson }};
+    window.SUDOKU_GIVENS = {{ givens|tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

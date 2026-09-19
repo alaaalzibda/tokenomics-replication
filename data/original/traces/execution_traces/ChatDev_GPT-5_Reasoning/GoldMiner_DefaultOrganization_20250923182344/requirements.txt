@@ -1,0 +1,2 @@
+# No external Python packages are required.
+# The game runs in the browser via PyScript/Pyodide and uses only the Python standard library.

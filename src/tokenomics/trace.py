@@ -52,11 +52,25 @@ class CallRecord:
 
     @property
     def total_tokens(self) -> int:
-        return self.input_tokens + self.output_tokens + self.reasoning_tokens
+        """Input + output.
+
+        NOT input + output + reasoning. Providers report ``completion_tokens``
+        INCLUSIVE of reasoning tokens, so adding reasoning again double-counts
+        it. This was verified against the authors' own published traces: under
+        the double-counting convention we got input 45.1 / output 37.8 /
+        reasoning 17.1, against their published 53.9 / 24.4 / 21.6; under this
+        one we get 54.4 / 25.0 / 20.6, all within about a point.
+        """
+        return self.input_tokens + self.output_tokens
+
+    @property
+    def visible_output_tokens(self) -> int:
+        """Output the user actually sees: completion minus hidden reasoning."""
+        return max(0, self.output_tokens - self.reasoning_tokens)
 
     @property
     def billable_tokens(self) -> int:
-        """Input + output only. This is the cross-model comparable quantity."""
+        """Input + output. The cross-model comparable quantity."""
         return self.input_tokens + self.output_tokens
 
     def prompt_text(self) -> str:

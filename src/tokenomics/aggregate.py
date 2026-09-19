@@ -96,12 +96,15 @@ def type_shares(records: Sequence[CallRecord], include_reasoning: bool = False) 
     per_run: list[dict[str, float]] = []
 
     for _, calls in group_by_run(records):
+        # completion_tokens includes reasoning_tokens, so the denominator is
+        # input + completion, and visible output is completion - reasoning.
         sums = {
             "input": sum(c.input_tokens for c in calls),
-            "output": sum(c.output_tokens for c in calls),
+            "output": sum((c.visible_output_tokens if include_reasoning
+                           else c.output_tokens) for c in calls),
             "reasoning": sum(c.reasoning_tokens for c in calls),
         }
-        denom = sum(sums[k] for k in keys)
+        denom = sum(c.billable_tokens for c in calls)
         if denom:
             per_run.append({k: sums[k] / denom for k in keys})
 
@@ -116,12 +119,14 @@ def stage_type_shares(
     for c in records:
         s = stage_for(c.phase)
         acc[s]["input"] += c.input_tokens
-        acc[s]["output"] += c.output_tokens
+        acc[s]["output"] += (c.visible_output_tokens if include_reasoning
+                             else c.output_tokens)
         acc[s]["reasoning"] += c.reasoning_tokens
+        acc[s]["_denom"] += c.billable_tokens
 
     out: dict[str, dict[str, float]] = {}
     for stage, sums in acc.items():
-        denom = sum(sums[k] for k in keys)
+        denom = sums["_denom"]
         if denom:
             out[stage] = {k: sums[k] / denom for k in keys}
     return out

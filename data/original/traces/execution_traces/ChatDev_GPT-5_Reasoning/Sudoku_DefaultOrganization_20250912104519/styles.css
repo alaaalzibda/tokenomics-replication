@@ -1,0 +1,144 @@
+'''
+Styles for the Sudoku web app, including board layout, typography, and state highlights.
+'''
+/*
+'''
+Styles for the Sudoku web app, including board layout, typography, and state highlights.
+'''
+*/
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #60a5fa;
+  --accent-2: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --border: #374151;
+  --cell-bg: #1f2937;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+  background: radial-gradient(1200px 600px at 50% -100px, #111827, #0b1020), var(--bg);
+  color: var(--text);
+}
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.subtitle {
+  margin-top: 6px;
+  color: var(--muted);
+}
+main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  justify-items: center;
+}
+.sudoku {
+  border-collapse: collapse;
+  background: var(--panel);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.sudoku td {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--border);
+  text-align: center;
+  padding: 0;
+}
+.sudoku input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--cell-bg);
+  color: var(--text);
+  font-size: 22px;
+  text-align: center;
+  outline: none;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+.sudoku input:focus {
+  background: #263445;
+}
+.sudoku input.given {
+  background: #18212e;
+  color: #9fb6ce;
+  font-weight: 700;
+}
+.thick-top { border-top: 3px solid var(--text) !important; }
+.thick-left { border-left: 3px solid var(--text) !important; }
+.thick-right { border-right: 3px solid var(--text) !important; }
+.thick-bottom { border-bottom: 3px solid var(--text) !important; }
+.controls {
+  display: flex;
+  gap: 10px;
+}
+.controls button {
+  background: #1f2a3a;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+.controls button:hover {
+  background: #263445;
+  border-color: #4b5563;
+}
+.controls button:active {
+  transform: translateY(1px);
+}
+.message {
+  min-height: 22px;
+  text-align: center;
+  color: var(--muted);
+}
+.message.success { color: var(--accent-2); }
+.message.warning { color: var(--warning); }
+.message.error   { color: var(--error); }
+.message.info    { color: var(--accent); }
+.sudoku input.conflict {
+  color: var(--error);
+}
+.sudoku input.incorrect {
+  background: rgba(248, 113, 113, 0.18);
+  color: #ffb3b3;
+  font-weight: 700;
+}
+footer {
+  margin-top: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .sudoku td {
+    width: 38px;
+    height: 38px;
+  }
+  .sudoku input {
+    font-size: 18px;
+  }
+}

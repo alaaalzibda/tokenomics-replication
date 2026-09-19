@@ -1,0 +1,50 @@
+'''
+Main HTML file for the Match-3 game. Builds the UI, includes controls for mode selection,
+and loads the game JavaScript module which initializes and runs the game logic.
+'''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Match-3 Puzzle Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Match-3 Puzzle</h1>
+    <div class="controls">
+      <div class="mode">
+        <label><input type="radio" name="mode" value="moves" checked> Moves</label>
+        <label><input type="radio" name="mode" value="time"> Time</label>
+      </div>
+      <div class="hud">
+        <div class="stat"><span id="score">0</span><small>Score</small></div>
+        <div class="stat moves"><span id="moves">0</span><small>Moves</small></div>
+        <div class="stat time hidden"><span id="time">00:00</span><small>Time</small></div>
+      </div>
+      <div class="actions">
+        <button id="newGameBtn" class="primary">New Game</button>
+        <button id="shuffleBtn" class="secondary">Shuffle</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div id="message" class="message"></div>
+    <div id="board" class="board" aria-label="Game board" role="grid"></div>
+    <div id="overlay" class="overlay hidden">
+      <div class="overlay-content">
+        <h2 id="overlayTitle">Game Over</h2>
+        <p id="overlaySubtitle"></p>
+        <button id="overlayNewGame" class="primary">Play Again</button>
+      </div>
+    </div>
+  </main>
+  <footer class="app-footer">
+    <p>How to play: Click a candy to select, then click an adjacent candy to swap. Create matches of 3 or more to score. Chain reactions earn multipliers!</p>
+  </footer>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

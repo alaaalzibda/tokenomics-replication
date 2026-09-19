@@ -107,6 +107,69 @@ restructuring agent context rather than caching it.
 `k` sensitivity is reported over {8, 16, 32, 64, 128}. A claim that moves with
 `k` is not a claim.
 
+## Validation: the pipeline reproduces the original exactly
+
+The authors released their 30 ChatDev/GPT-5 execution traces
+([Zenodo record 17430187](https://zenodo.org/records/17430187)). Those logs
+carry, per LLM call, the phase that was running and the provider-reported token
+counts — everything the stage aggregation needs.
+
+So before reporting anything of our own, we ran **our** phase mapping and
+**our** aggregation over **their** raw traces and compared against their
+published table.
+
+```
+python3 scripts/verify_against_original.py \
+  data/original/traces/execution_traces/ChatDev_GPT-5_Reasoning
+```
+
+| Stage | Ours | Paper | Δ | n |
+|---|---|---|---|---|
+| Design | 2.4% | 2.4% | 0.0 | 30/30 |
+| Coding | 8.6% | 8.6% | 0.0 | 30/30 |
+| Code Completion | 26.8% | 26.8% | 0.0 | **6/30** |
+| Code Review | **59.4%** | **59.4%** | 0.0 | 30/30 |
+| Testing | 10.3% | 10.3% | 0.0 | **12/30** |
+| Documentation | 20.1% | 20.1% | 0.0 | 30/30 |
+
+| Token type | Ours | Paper | Δ |
+|---|---|---|---|
+| input | 54.4% | 53.9% | +0.5 |
+| output | 24.9% | 24.4% | +0.5 |
+| reasoning | 20.6% | 21.6% | −1.0 |
+
+Every stage share reproduces to within 0.05 percentage points, and both
+small-sample stage counts — Code Completion in 6 of 30 tasks, Testing in 12 —
+match exactly. The instrument is validated against data we did not produce.
+
+### The bug this caught
+
+The first run of this validation returned input 45.1% / output 37.8% /
+reasoning 17.1% against their 53.9 / 24.4 / 21.6. The cause was ours:
+
+**Providers report `completion_tokens` inclusive of `reasoning_tokens`.** Our
+`CallRecord.total_tokens` was returning `input + output + reasoning`, counting
+reasoning twice. Correcting the denominator to `input + completion`, and taking
+visible output as `completion − reasoning`, brought all three within a point.
+
+The bug was invisible in our own runs, because a local model reports zero
+reasoning tokens — it would have surfaced only on a frontier-model run, after
+the expensive part. It is fixed in `trace.py` and `aggregate.py`, and
+`total_tokens` now carries the reasoning behind the convention.
+
+### What the traces also settle
+
+* The logs are **ChatDev 1.x** — the config paths in every trace point at
+  `ChatDev/CompanyConfig/Default/ChatChainConfig.json`, the 1.x layout.
+* The runs are dated **8–13 September 2025**, four months before the 2.0
+  rewrite removed 1.x from the repository.
+* **The replication package does not pin a ChatDev version or commit either.**
+  Neither the paper nor the Zenodo README names one, so the exact framework
+  version remains unrecoverable from the published artifacts.
+* Their traces record token counts but **not the verbatim prompt arrays**, so
+  the redundancy measure below cannot be run over them without reconstructing
+  prompts. That is not attempted here.
+
 ## Results
 
 **10 of the 30 ProgramDev tasks, 162 LLM calls, `qwen2.5-coder:7b` via Ollama,

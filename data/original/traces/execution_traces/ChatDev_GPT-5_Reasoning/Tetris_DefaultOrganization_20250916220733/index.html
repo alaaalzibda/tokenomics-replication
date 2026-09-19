@@ -1,0 +1,55 @@
+'''
+"Main HTML entry for the Tetris game. It defines the layout, canvases for the board and next-piece preview, and UI controls. It loads the CSS and the main JavaScript module to start the game."
+'''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ChatDev Tetris</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>ChatDev Tetris</h1>
+    <div class="game-area">
+      <canvas id="board" width="320" height="640" aria-label="Tetris board" role="img"></canvas>
+      <div class="sidebar">
+        <div class="panel">
+          <h2>Next</h2>
+          <canvas id="next" width="128" height="128" aria-label="Next piece preview" role="img"></canvas>
+        </div>
+        <div class="panel">
+          <h2>Stats</h2>
+          <div class="stats">
+            <div><span>Score:</span><span id="score">0</span></div>
+            <div><span>Lines:</span><span id="lines">0</span></div>
+            <div><span>Level:</span><span id="level">1</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Controls</h2>
+          <ul class="controls">
+            <li>Left/Right: Move</li>
+            <li>Down: Soft Drop</li>
+            <li>Up/X: Rotate CW</li>
+            <li>Z: Rotate CCW</li>
+            <li>Space: Hard Drop</li>
+            <li>P: Pause/Resume</li>
+            <li>R: Restart</li>
+          </ul>
+        </div>
+        <div class="panel buttons">
+          <button id="btn-start">Start</button>
+          <button id="btn-pause">Pause</button>
+          <button id="btn-restart">Restart</button>
+        </div>
+      </div>
+    </div>
+    <footer>
+      Changing the digital world through programming — ChatDev
+    </footer>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

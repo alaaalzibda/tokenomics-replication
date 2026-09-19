@@ -1,0 +1,37 @@
+'''
+Main HTML template for the web-based Strands puzzle UI.
+Provides the board container, status, and controls. Styling and interactivity
+are handled by static/style.css and static/app.js respectively.
+'''
+<!--
+'''
+Main HTML template for the web-based Strands puzzle UI.
+Provides the board container, status, and controls. Styling and interactivity
+are handled by static/style.css and static/app.js respectively.
+'''
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Strands - Programming Languages Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/static/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="app">
+      <h1 id="theme" class="theme"></h1>
+      <div id="board" class="board" aria-label="Strands board" role="grid"></div>
+      <div class="status">
+        <div id="found" class="status-item"></div>
+        <div id="hints" class="status-item"></div>
+      </div>
+      <div class="controls">
+        <button id="hintBtn" class="btn">Use Hint</button>
+        <button id="resetBtn" class="btn">Reset Progress</button>
+        <button id="remainingBtn" class="btn">Show Remaining Words</button>
+      </div>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

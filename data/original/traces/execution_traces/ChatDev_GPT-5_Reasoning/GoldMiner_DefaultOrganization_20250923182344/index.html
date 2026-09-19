@@ -1,0 +1,114 @@
+'''
+HTML entry point that loads PyScript and runs the Gold Miner Python game in the browser.
+This version preloads local Python modules (models.py, level.py) via py-config
+to avoid ModuleNotFoundError when opening directly.
+Open this file in a modern browser with internet access.
+'''
+<!--
+HTML entry point that loads PyScript and runs the Gold Miner Python game in the browser.
+This version preloads local Python modules (models.py, level.py) via py-config
+to avoid ModuleNotFoundError when opening directly.
+Open this file in a modern browser with internet access.
+Fix applied:
+- Removed invalid Python-style triple-quoted docstring at the top.
+- Replaced with this proper HTML comment so the file parses correctly.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gold Miner (PyScript)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- PyScript Runtime (you may pin to a specific release if desired) -->
+  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0b132b;
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-container {
+      position: relative;
+      width: 900px;
+      max-width: 95vw;
+      margin: 12px;
+    }
+    #hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      color: #e0fbfc;
+    }
+    #game-canvas {
+      width: 900px;
+      height: 600px;
+      max-width: 95vw;
+      max-height: 63.33vw; /* keep aspect ratio approx 3:2 */
+      border: 2px solid #ffffff30;
+      background: #1b263b;
+      display: block;
+    }
+    #overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+    #overlay-text {
+      font-size: 20px;
+      margin-bottom: 16px;
+      white-space: pre-line;
+    }
+    .btn {
+      background: #1982c4;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      margin: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .btn:hover {
+      background: #118ab2;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="hud">
+      <div>Gold Miner - PyScript Edition</div>
+      <div>Controls: Press Space or Click to grab</div>
+    </div>
+    <canvas id="game-canvas" width="900" height="600"></canvas>
+    <div id="overlay">
+      <div id="overlay-text">Level Complete!</div>
+      <div>
+        <button id="btn-next" class="btn">Next Level</button>
+        <button id="btn-retry" class="btn">Retry</button>
+      </div>
+    </div>
+  </div>
+  <!-- Preload local Python modules to ensure imports resolve -->
+  <py-config>
+    {
+      "packages": [],
+      "files": ["./models.py", "./level.py"]
+    }
+  </py-config>
+  <!-- Load the Python game code -->
+  <py-script src="main.py"></py-script>
+</body>
+</html>
