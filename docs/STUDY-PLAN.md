@@ -6,8 +6,13 @@ framework or of the model? A replication and extension of *Tokenomics*
 
 ## What the original found
 
-ChatDev, GPT-5 reasoning (`gpt-5-2025-08-07`), 30 ProgramDev tasks, n=1 per
-task, temperature immutable at 1.0.
+ChatDev, GPT-5 reasoning (`gpt-5-2025-08-07`), 30 ProgramDev tasks,
+temperature 1.0 (the paper states the parameter is not supported for this model,
+so the default was used).
+
+The paper does not state how many runs were made per task. Their released
+artifact contains 30 traces for 30 distinct projects, so one run each is the
+natural reading, but it is an inference and not their claim.
 
 | Stage | Share | n of 30 |
 |---|---|---|

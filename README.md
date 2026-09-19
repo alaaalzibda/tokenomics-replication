@@ -161,7 +161,7 @@ the expensive part. It is fixed in `trace.py` and `aggregate.py`, and
 
 * The logs are **ChatDev 1.x** — the config paths in every trace point at
   `ChatDev/CompanyConfig/Default/ChatChainConfig.json`, the 1.x layout.
-* The runs are dated **8–13 September 2025**, four months before the 2.0
+* The runs are dated **8–24 September 2025**, close to four months before the 2.0
   rewrite removed 1.x from the repository.
 * **The replication package does not pin a ChatDev version or commit either.**
   Neither the paper nor the Zenodo README names one, so the exact framework
@@ -204,8 +204,10 @@ mean of **34.7% of input tokens are redundant and uncacheable** — re-sent
 content positioned where no prefix cache reaches it, paid at full rate on every
 call. On no task did that fall below 23.7%.
 
-The measure is stable in two independent ways. It moves by roughly 3–6
-percentage points across window sizes `k` = 8 to 128, with no threshold effect.
+The measure is stable in two independent ways. Across window sizes `k` = 8 to
+128 it falls monotonically by between **4.8 and 9.4 percentage points**
+depending on the task, with no threshold effect — the ranking of tasks and the
+size of the effect are unchanged by the choice of `k`.
 And re-running the whole analysis under a word-split heuristic instead of
 `tiktoken` shifted every pooled figure by less than 1 percentage point
 (redundant 80.6 vs 79.7, cacheable 45.0 vs 45.1, uncacheable 35.6 vs 34.7),
@@ -243,7 +245,7 @@ Review and Testing do not. Code Completion is rare in both — it triggered in
 
 ### Caveats on these specific numbers
 
-* One run per task. No variance estimate within a task.
+* One run per task on our side. No variance estimate within a task.
 * 10 of 30 tasks.
 
 ## Running it
@@ -279,9 +281,10 @@ python3 scripts/analyze.py "data/traces/*__qwen2.5-coder-7b.jsonl" \
   project size, so these figures are likely a lower bound.
 * **Phase mapping.** Theirs, reused unchanged. An alternative mapping is a
   separate sensitivity analysis, not a silent improvement.
-* **Run-to-run variance.** The original ran n=1 per task at temperature 1.0.
-  With n=1 no cross-model difference can be distinguished from noise; use
-  `--repeat` and report the spread.
+* **Run-to-run variance.** The paper does not state runs per task; their 30
+  traces for 30 projects imply one each. With one run, no cross-model
+  difference can be distinguished from noise; use `--repeat` and report the
+  spread.
 * **max_tokens.** See instrumentation note above.
 
 ## Layout
