@@ -16,3 +16,6 @@ vendor/ChatDev1x/WareHouse/
 vendor/ChatDev1x/misc/
 vendor/ChatDev1x/online_log/static/
 vendor/ChatDev1x/online_log/*.log
+
+# stray clone of ChatDev 2.0, kept only to show the rewrite; not used
+vendor/ChatDev/
