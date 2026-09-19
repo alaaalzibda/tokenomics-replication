@@ -1,0 +1,20 @@
+[project]
+name = "tokenomics-replication"
+version = "0.1.0"
+description = "Is the 59.4% code-review token share a property of the framework or of the model? A replication and extension of Salim et al. (arXiv:2601.14470)."
+requires-python = ">=3.10"
+dependencies = [
+    "tiktoken>=0.7.0",
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
