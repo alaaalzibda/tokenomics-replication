@@ -36,6 +36,9 @@ def main() -> int:
     ap.add_argument("--api-key", default=None, help="defaults to ANTHROPIC_API_KEY")
     ap.add_argument("--out", default=None)
     ap.add_argument("--chatdev", default=str(ROOT / "vendor" / "ChatDev1x"))
+    ap.add_argument("--config", default="Default",
+                    help="CompanyConfig folder: Default, or Reordered for the "
+                         "cache-friendly prompt ordering (scripts/reorder_prompts.py)")
     args = ap.parse_args()
 
     key = args.api_key or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
@@ -72,9 +75,10 @@ def main() -> int:
     # Hand over to ChatDev, unmodified. GPT_4 keeps its token bookkeeping valid.
     sys.path.insert(0, str(chatdev))
     os.chdir(chatdev)
-    sys.argv = ["run.py", "--task", args.task, "--name", args.name, "--model", "GPT_4"]
+    sys.argv = ["run.py", "--task", args.task, "--name", args.name,
+                "--model", "GPT_4", "--config", args.config]
 
-    print(f"[runner] endpoint={args.base_url}  wire model={args.model}")
+    print(f"[runner] endpoint={args.base_url}  wire model={args.model}  config={args.config}")
     print(f"[runner] task={args.task!r}\n")
 
     import runpy

@@ -38,6 +38,10 @@ def main() -> int:
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--timeout", type=int, default=1800, help="seconds per task")
     ap.add_argument("--repeat", type=int, default=1, help="runs per task, for variance")
+    ap.add_argument("--config", default="Default",
+                    help="CompanyConfig folder; 'Reordered' runs the cache-friendly arm")
+    ap.add_argument("--tag", default=None,
+                    help="suffix for trace filenames so two arms never overwrite each other")
     args = ap.parse_args()
 
     tasks = json.loads(Path(args.dataset).read_text())
@@ -46,6 +50,8 @@ def main() -> int:
         tasks = tasks[: args.limit]
 
     tag = args.model.replace("/", "_").replace(":", "-")
+    if args.tag:
+        tag = f"{tag}-{args.tag}"
     trace_dir = ROOT / "data" / "traces"
     trace_dir.mkdir(parents=True, exist_ok=True)
 
@@ -68,7 +74,7 @@ def main() -> int:
                 sys.executable, str(ROOT / "scripts" / "run_task.py"),
                 "--task", t["description"], "--name", run_name,
                 "--model", args.model, "--base-url", args.base_url,
-                "--out", str(out),
+                "--out", str(out), "--config", args.config,
             ]
             if args.api_key:
                 cmd += ["--api-key", args.api_key]

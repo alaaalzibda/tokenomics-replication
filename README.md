@@ -18,6 +18,11 @@ overall in the original, rising to 80.2% in Documentation). How much of that
 is re-transmission, and how much of *that* is beyond the reach of a prefix
 cache?
 
+If you only read one section, read
+[What a development team can do with this](#what-a-development-team-can-do-with-this).
+It is the practical answer: which part of an agent's bill is avoidable, and
+what to change to avoid it.
+
 ## Exactly what was run
 
 Reproducibility depends on these being stated, so they are stated.
@@ -217,6 +222,44 @@ Input tokens were **75.6%** of consumption (sd 4.1), against 53.9% in the
 original. Part of that gap is structural: our model emits no reasoning tokens,
 so the same input is divided by a smaller denominator.
 
+### Where the stranded tokens actually are
+
+The original paper reports token spend by stage. Running the redundancy measure
+with the same stage attribution puts the two tables side by side:
+
+```bash
+python3 scripts/redundancy_by_stage.py "data/traces/*__qwen2.5-coder-7b.jsonl" --tokenizer strict
+```
+
+| Stage | Share of all input | Redundant | **Uncacheable** |
+|---|---|---|---|
+| **Documentation** | 22.6% | 82.8% | **73.4%** |
+| Code Review | 38.6% | 85.8% | 32.0% |
+| Testing | 27.5% | 92.3% | 22.5% |
+| Coding | 2.8% | 29.0% | 20.2% |
+| Design | 4.1% | 19.3% | 13.2% |
+| Code Completion | 4.5% | 72.5% | 7.4% |
+| **all** | 100% | 82.0% | 36.5% |
+
+**Stranding is not uniform. It ranges from 7.4% to 73.4% depending on the
+stage**, and that changes the advice. A team should not apply one fix
+everywhere: Code Completion is almost entirely cacheable and needs nothing,
+while Documentation wastes nearly three quarters of its input on repetition no
+cache can reach.
+
+This also sharpens a result in the original. The paper reports Documentation as
+the most input-dominated stage, at 80.2% input. Our measurement suggests *why*
+that input is expensive: most of it is not new material but re-sent context
+positioned where the discount cannot apply.
+
+Testing is the mirror image — the highest raw redundancy of any stage at 92.3%,
+yet only 22.5% stranded, so caching already absorbs most of it.
+
+A caveat on mechanism: these are the positions of repeated tokens, which we
+measure directly. *Why* a given stage strands more than another — prompt
+template ordering, how late in the run the stage fires, how much prior content
+exists to repeat against — is a hypothesis this data does not settle.
+
 ### RQ1 — stage distribution
 
 | Stage | Ours (mean) | sd | n | Original |
@@ -247,6 +290,204 @@ Review and Testing do not. Code Completion is rare in both — it triggered in
 
 * One run per task on our side. No variance estimate within a task.
 * 10 of 30 tasks.
+
+## What a development team can do with this
+
+The paper answers *where* tokens go. This section answers the question a team
+actually has to act on: **which part of that bill is avoidable, and what do I
+change to avoid it?**
+
+### The problem, stated plainly
+
+A language model has no memory. Every call is independent: text in, text out,
+nothing retained. Anything that looks like memory — an agent that knows what
+was decided three steps ago, a chat that follows a long conversation — is the
+surrounding application **re-sending that text on every single call**.
+
+For an agentic system this compounds. In ChatDev's review loop the system
+prompt, the coding standards and the entire current source file go out again on
+every round, even when three lines changed. That is why input dominates
+consumption: 53.9% of tokens in the original study, 75.6% in our runs.
+
+Teams know their agent is expensive. What they do not know is **how much of
+that cost is new information and how much is re-transmission** — and, crucially,
+which part of the re-transmission they can actually do something about.
+
+### Why the total is not actionable, but the split is
+
+"Our agent repeats 80% of its input" is an interesting fact and a useless one.
+It does not tell you whether to change a setting or change your code.
+
+Provider prefix caching (OpenAI, Anthropic and others) charges a large discount
+for the opening stretch of a prompt that matches one processed recently. The
+critical property is that it matches **from token zero and stops at the first
+difference**. It is a bookmark, not a search: the provider has stored the work
+for "a prompt beginning with exactly these tokens", and because a transformer's
+computation at position *n* depends on every position before it, that stored
+work is valid only if the entire preceding run is identical.
+
+So repeated text falls into two categories with completely different economics:
+
+| | What it is | Who fixes it | How |
+|---|---|---|---|
+| **Cacheable** | Repeated text sitting **before** the first difference from the previous prompt | The provider | Enable prefix caching. No code change |
+| **Uncacheable** | Repeated text sitting **after** the first difference | You | Change how the prompt is assembled |
+
+The second category is invisible in every dashboard we are aware of. It is
+billed at the full input rate, on every call, forever, and no caching product
+on the market can reach it.
+
+### Worked example
+
+One call sends 1,000 input tokens. Our measurements across ten tasks give:
+
+```
+ 203 tokens   genuinely new                           unavoidable
+ 450 tokens   repeated, before the first difference   cache reaches it
+ 347 tokens   repeated, after the first difference    cache cannot reach it
+```
+
+(Our shares are 20.3 / 45.1 / 34.7 percent; rounded to whole tokens they would
+sum to 1,001, so one token is shaved off the cacheable bucket here to keep the
+example exact.)
+
+797 of those 1,000 tokens are text the system already sent. Not 797 different
+things — the same standards and the same source file, again.
+
+Let `d` be your provider's cache-hit rate as a fraction of the standard input
+rate (commonly around 0.1, but check your own pricing page — it varies by
+provider and has changed over time). Per 1,000 input tokens, in units of the
+standard input price:
+
+* **No caching:** 1000 × 1 = **1000**
+* **Caching on, prompts as they are:** 550 × 1 + 450 × d = **595** at d = 0.1
+* **Caching on, prompts reordered so repetition sits in the prefix:**
+  203 × 1 + 797 × d = **283** at d = 0.1
+
+That is a **40% reduction** from enabling caching alone, and a **72% reduction**
+once the prompt order stops stranding repetition — on input tokens, which were
+75.6% of all consumption in these runs.
+
+The first step is a configuration change. The second is a change to the order
+in which you concatenate strings. Neither alters a single word of what the
+model is asked.
+
+### What "reorder the prompt" actually means
+
+Most agent frameworks build a prompt by gluing sections together, and the order
+is usually whatever was convenient when the code was written. A typical
+arrangement puts the volatile part first:
+
+```
+[Task: Gomoku. Phase: CodeReview, round 3 of 6]   <-- changes every call
+You are a Code Reviewer. Follow the architecture rules...
+...500 lines of standards...
+Current implementation:
+...90 lines of source...
+```
+
+Every call changes line 1, so the cache matches almost nothing and you pay full
+rate for 590 lines that were byte-identical to last time.
+
+Inverting it costs nothing:
+
+```
+You are a Code Reviewer. Follow the architecture rules...
+...500 lines of standards...                       <-- never changes
+Current implementation:
+...90 lines of source...                           <-- changes rarely
+[Task: Gomoku. Phase: CodeReview, round 3 of 6]    <-- changes every call
+```
+
+Same information, same question, same answer. But now the cache matches 590
+lines before reaching anything that moved.
+
+**The design rule: order sections from most stable to least stable.** System
+role and rules first, then long-lived project context, then the current
+artefact, and the per-call instruction last.
+
+**What silently destroys a prefix.** Anything variable near the top, even when
+it carries no meaning for the task:
+
+* timestamps or dates injected into a system prompt
+* request, session or trace IDs
+* turn or round counters ("round 3 of 6")
+* the task or project name, when it is prepended rather than appended
+* a randomised greeting or persona line
+* a typo — one character is enough; the match ends there and everything below
+  it is billed in full
+
+None of these change what is being asked. All of them can cost you the discount
+on everything that follows.
+
+### A third lever: stop re-sending what did not change
+
+Reordering makes repetition cheap. Not repeating is cheaper still.
+
+ChatDev re-sends the complete source file on every review round even when the
+previous round changed three lines. Sending a unified diff, or only the changed
+region with a few lines of surrounding context, attacks the volume rather than
+the unit price. This is more invasive than reordering — the agent's prompts
+have to be written to expect diffs — but it is the only lever that reduces the
+token count itself.
+
+Ordering to apply them in, cheapest first:
+
+1. **Enable prefix caching.** Configuration. Minutes.
+2. **Reorder prompt assembly, stable to volatile.** A small, local code change,
+   and a lint rule to keep it that way.
+3. **Send diffs instead of whole artefacts.** A real redesign of the agent's
+   prompts, worth doing only once 1 and 2 are exhausted.
+
+### How to get your own three numbers
+
+The harness records every call a framework makes and reports the split. It
+wraps the provider client rather than modifying the framework, so it can be
+attached to an existing agent without touching it:
+
+```bash
+python3 scripts/summarise.py "data/traces/*__<your-model>.jsonl" --tokenizer strict
+python3 scripts/window_sensitivity.py "data/traces/*__<your-model>.jsonl"
+```
+
+Read the result as a diagnosis:
+
+* **High redundancy, high cacheable share** — you are leaving money on the
+  table for no reason. Turn caching on.
+* **High redundancy, high uncacheable share** — caching will disappoint you.
+  Your prompt order is the problem. This is the case our ten tasks fall into,
+  with roughly a third of all input stranded.
+* **Low redundancy** — repetition is not your cost driver. Look at output and
+  reasoning tokens instead, and at how many calls the framework makes at all.
+
+### Beyond cost
+
+Three consequences follow from the same measurement, and only the first is
+about money:
+
+* **Latency.** A cache hit skips the prefill for that prefix, so the discount
+  usually comes with a faster first token. Time-to-first-token on agentic
+  workloads is dominated by prefill on long prompts.
+* **Context window.** Re-sent context occupies the window. An agent that spends
+  80% of its input on repetition hits its context limit roughly five times
+  sooner than one that does not, which forces truncation or summarisation and
+  degrades quality for reasons that have nothing to do with the model.
+* **Energy.** Tokens processed are computation performed. Repetition that the
+  cache does not absorb is compute spent re-deriving something already derived.
+  We measure tokens, not joules, and we are careful not to claim otherwise —
+  but the direction is not in question.
+
+### What this section does not claim
+
+* The reordering figures above are an **upper bound** computed from where
+  repeated tokens sit, not a measured saving from an implemented change. The
+  obvious next experiment is to implement the reordering in ChatDev and measure
+  whether the predicted shift from uncacheable to cacheable actually occurs.
+* Ten tasks, one framework, one model, one run each.
+* ProgramDev tasks are small. Redundancy plausibly rises with project size, so
+  these figures are more likely a floor than a ceiling.
+* Cache-hit pricing and eligibility rules differ by provider and change over
+  time. The arithmetic above is parameterised by `d` for that reason.
 
 ## Running it
 
