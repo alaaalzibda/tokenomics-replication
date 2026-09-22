@@ -65,4 +65,98 @@ python3 scripts/redundancy_by_stage.py "data/traces/*__qwen2.5-coder-7b-reordere
 
 ## Result
 
-*(to be filled in after the run — including if it fails)*
+Run: 22 September 2026, Reordered config, `qwen2.5-coder:7b`, 10 ProgramDev
+tasks, 73.2 minutes, 10/10 completed, none failed. Both arms measured with
+`--tokenizer strict` (`tiktoken` `o200k_base`).
+
+**The prediction failed. Reordering did not convert stranded tokens into
+cacheable ones; pooled stranding rose.**
+
+| | baseline | reordered |
+|---|---|---|
+| input tokens measured | 216,126 | 205,465 |
+| redundant | 81.1% | 81.9% |
+| **stranded (no prefix cache reaches it)** | **35.8%** | **40.7%** |
+
+Against the four registered predictions:
+
+1. **Total redundancy stays roughly flat.** Held: 81.1% -> 81.9%.
+2. **The split shifts toward cacheable.** *Falsified.* Stranded input rose
+   4.9 points.
+3. **The largest drop appears where the static tail is largest.** *Falsified.*
+   Documentation, the stage with the longest static tail, got worse.
+4. **Code Completion barely moves.** *Falsified.* It moved most of all, and in
+   the wrong direction.
+
+Per stage:
+
+| Stage | stranded, baseline | stranded, reordered | change |
+|---|---|---|---|
+| Code Completion | 8.8% | 32.8% | **+24.0** |
+| Testing | 21.5% | 33.3% | **+11.8** |
+| Documentation | 71.3% | 74.7% | +3.4 |
+| Coding | 20.2% | 21.6% | +1.4 |
+| Design | 13.5% | 14.6% | +1.1 |
+| Code Review | 31.9% | 28.6% | **-3.3** |
+
+Code Review is the only stage that moved as predicted.
+
+### Is it just the stage mix?
+
+No. The two arms did behave differently — 13.6 LLM calls per task against 16.2,
+and Testing fell from 27.5% of all input to 8.5% while Code Completion rose from
+4.5% to 11.0% — so the pooled figure is partly a mix effect. Applying the
+**baseline** stage weights to the **reordered** per-stage rates still gives
+**39.7%** against the baseline's 35.8%. The direction does not come from the mix.
+
+### Is it inside the noise?
+
+At task level, yes. Per task the change in stranded input is **+2.2 points,
+sd 9.8, improved on 4 of 10 tasks** (paired t = 0.72). What can be said is
+narrower than "reordering makes it worse": across ten tasks there is **no sign
+of the predicted improvement** in any view of the data, and the pooled and
+mix-adjusted figures both move the wrong way.
+
+Per-task means, for the record: redundant 79.7% -> 77.4%, cacheable
+45.0% -> 40.5%, stranded 34.7% -> 36.9%.
+
+### Why it failed
+
+The premise — that ChatDev assembles prompts volatile-first — is true of each
+phase template read on its own, and false of the run as a whole.
+
+Four of the thirteen Default phase prompts open with the same sentence, and
+what follows it is `{task}`, `{modality}`, `{language}`, `{ideas}` — placeholders
+whose **rendered values are constant for an entire run**. Across the 13 phases
+there are only **8 distinct opening lines**. So a call in one phase already
+shared a long prefix with calls in *other* phases, and that shared opening was
+doing most of the caching work.
+
+Reordering put each phase's own static instruction at the front. Those
+instructions differ per phase, so the same 13 phases now have **11 distinct
+opening lines**. Cross-phase prefix sharing was traded for within-phase sharing.
+
+For a stage with many calls of its own that trade is roughly neutral — Code
+Review, the largest stage, improved slightly. For a stage with few calls it is
+a bad trade, because almost all of its prefix matching came from other phases.
+Code Completion fires in 2 of 10 tasks and was the worst hit, 8.8% -> 32.8%.
+
+### What this changes in the guidance
+
+"Order sections from most stable to least stable" survives, but **"stable" has
+to mean how often the rendered value changes in a real run, not whether the
+line contains a template placeholder.** `{task}` is a placeholder and never
+changes within a run. A hard-coded instruction that differs per phase is
+literal text that changes at every phase switch. Sorting on the syntax instead
+of the behaviour is what produced this result.
+
+The practical form: measure, reorder, measure again. A reorder that looks
+obviously right can move the number the wrong way, and the only way to know is
+the second measurement.
+
+### What this does not test
+
+Whether a *correct* reordering — one that puts genuinely run-constant text
+first, across phases as well as within them — recovers the stranded share. That
+is the next experiment, and it needs the prompt templates rebuilt around a
+shared run-constant header rather than the halves swapped.

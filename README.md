@@ -233,15 +233,21 @@ python3 scripts/redundancy_by_stage.py "data/traces/*__qwen2.5-coder-7b.jsonl" -
 
 | Stage | Share of all input | Redundant | **Uncacheable** |
 |---|---|---|---|
-| **Documentation** | 22.6% | 82.8% | **73.4%** |
-| Code Review | 38.6% | 85.8% | 32.0% |
-| Testing | 27.5% | 92.3% | 22.5% |
-| Coding | 2.8% | 29.0% | 20.2% |
-| Design | 4.1% | 19.3% | 13.2% |
-| Code Completion | 4.5% | 72.5% | 7.4% |
-| **all** | 100% | 82.0% | 36.5% |
+| **Documentation** | 22.5% | 80.8% | **71.3%** |
+| Code Review | 38.6% | 85.5% | 31.9% |
+| Testing | 27.5% | 91.3% | 21.5% |
+| Coding | 2.8% | 28.9% | 20.2% |
+| Design | 4.1% | 19.7% | 13.5% |
+| Code Completion | 4.5% | 72.1% | 8.8% |
+| **all** | 100% | 81.1% | 35.8% |
 
-**Stranding is not uniform. It ranges from 7.4% to 73.4% depending on the
+Tokenizer: `tiktoken` `o200k_base`, token-pooled across the ten tasks. (An
+earlier version of this table carried the word-split heuristic's output —
+Documentation 73.4%, Code Completion 7.4%, all 36.5% — because the run that
+produced it fell back silently. The two differ by under 2 points everywhere and
+the ordering is identical, but these are the strict figures.)
+
+**Stranding is not uniform. It ranges from 8.8% to 71.3% depending on the
 stage**, and that changes the advice. A team should not apply one fix
 everywhere: Code Completion is almost entirely cacheable and needs nothing,
 while Documentation wastes nearly three quarters of its input on repetition no
@@ -252,8 +258,8 @@ the most input-dominated stage, at 80.2% input. Our measurement suggests *why*
 that input is expensive: most of it is not new material but re-sent context
 positioned where the discount cannot apply.
 
-Testing is the mirror image — the highest raw redundancy of any stage at 92.3%,
-yet only 22.5% stranded, so caching already absorbs most of it.
+Testing is the mirror image — the highest raw redundancy of any stage at 91.3%,
+yet only 21.5% stranded, so caching already absorbs most of it.
 
 A caveat on mechanism: these are the positions of repeated tokens, which we
 measure directly. *Why* a given stage strands more than another — prompt
@@ -365,12 +371,16 @@ standard input price:
   203 × 1 + 797 × d = **283** at d = 0.1
 
 That is a **40% reduction** from enabling caching alone, and a **72% reduction**
-once the prompt order stops stranding repetition — on input tokens, which were
-75.6% of all consumption in these runs.
+if the prompt order stopped stranding repetition entirely — on input tokens,
+which were 75.6% of all consumption in these runs.
 
-The first step is a configuration change. The second is a change to the order
-in which you concatenate strings. Neither alters a single word of what the
-model is asked.
+The first number is arithmetic on measured shares. **The second is a ceiling,
+not a result.** It is what you would get if every redundant token sat in the
+prefix. We tried to reach it by swapping the halves of ChatDev's prompt
+templates and it did not work — stranding rose from 35.8% to 40.7%. The run and
+the reason are in
+[docs/EXPERIMENT-reordering.md](docs/EXPERIMENT-reordering.md); the short
+version is below.
 
 ### What "reorder the prompt" actually means
 
@@ -406,6 +416,25 @@ lines before reaching anything that moved.
 role and rules first, then long-lived project context, then the current
 artefact, and the per-call instruction last.
 
+**"Stable" means the rendered value, not the template.** This is where our own
+reordering attempt went wrong, and it is worth stating plainly because the
+mistake is easy to make. We treated every placeholder as volatile and every
+hard-coded line as static, swapped the halves of each ChatDev phase template,
+and re-ran the ten tasks. Stranding went **up**, 35.8% to 40.7%.
+
+The reason: `{task}`, `{modality}` and `{language}` are placeholders whose
+values never change during a run, and four of ChatDev's thirteen phases opened
+with that same block — so calls in one phase were already sharing a long prefix
+with calls in other phases. Moving each phase's own instruction to the front
+replaced one shared opening with eleven phase-specific ones. Stages with few
+calls of their own lost the most: Code Completion went from 8.8% stranded to
+32.8%.
+
+So: sort sections by **how often their rendered value actually changes in a
+run** — across phases, not just within one — and measure again afterwards.
+A reorder that looks obviously right can move the number the wrong way.
+Full write-up: [docs/EXPERIMENT-reordering.md](docs/EXPERIMENT-reordering.md).
+
 **What silently destroys a prefix.** Anything variable near the top, even when
 it carries no meaning for the task:
 
@@ -435,7 +464,8 @@ Ordering to apply them in, cheapest first:
 
 1. **Enable prefix caching.** Configuration. Minutes.
 2. **Reorder prompt assembly, stable to volatile.** A small, local code change,
-   and a lint rule to keep it that way.
+   and a lint rule to keep it that way. Measure before and after: our own
+   attempt at this on ChatDev made things worse, for the reason above.
 3. **Send diffs instead of whole artefacts.** A real redesign of the agent's
    prompts, worth doing only once 1 and 2 are exhausted.
 
@@ -548,4 +578,12 @@ scripts/
 
 ## Status
 
-10 of 30 ProgramDev tasks run and analysed. Remaining: the other 20 tasks, a\nsecond model for a controlled RQ1 test, repeat runs for variance, and a\nregeneration of all figures under a real tokenizer.
+10 of 30 ProgramDev tasks run and analysed, in two arms: the Default config and
+a reordered-prompt config (the reordering experiment, which failed — see
+[docs/EXPERIMENT-reordering.md](docs/EXPERIMENT-reordering.md)). All figures in
+this README are `tiktoken` `o200k_base`.
+
+Remaining: the other 20 tasks; a second model, which is the only thing that
+makes RQ1 a controlled test; repeat runs per task for a variance estimate; and
+a reordering that sorts sections by how often their rendered value changes
+across the whole run rather than by template syntax.
