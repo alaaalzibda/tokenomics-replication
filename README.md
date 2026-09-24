@@ -103,6 +103,38 @@ For each call, in token space, with positions:
 so `redundant = cacheable + uncacheable` exactly, by construction, and a test
 asserts it.
 
+### The three categories, on five tokens
+
+Tokens as letters. Two calls in one run:
+
+```
+Call 1:    A  B  C  D  E
+Call 2:    A  B  C  X  D  E
+positions  0  1  2  3  4  5
+           └ cache_len=3 ┘
+```
+
+`cache_len` is 3: `A B C` matches Call 1 from position 0, and `X` breaks it.
+Classifying Call 2:
+
+| Positions | Tokens | Sent before? | Before `cache_len`? | Category |
+|---|---|---|---|---|
+| 0–2 | `A B C` | yes | yes | **cacheable** |
+| 3 | `X` | no | — | not redundant |
+| 4–5 | `D E` | yes | no | **uncacheable** |
+
+Three points the example is here to make:
+
+* **Only repeats are classified.** `X` is new text, so it is neither cacheable
+  nor uncacheable. It is input you have to pay for either way.
+* **`D E` is identical to Call 1 and still costs full price.** Nothing about
+  the text changed; it moved. One inserted token at position 3 pushed it out
+  of the prefix, and no prefix cache reaches past the first difference.
+* **`redundant = cacheable + uncacheable`.** Three tokens plus two, and `X` in
+  neither, which is the partition the assertion in `shingle.py` enforces.
+
+The 34.7% headline is the `D E` case, measured across 162 calls.
+
 **`uncacheable` is the headline.** Provider prefix caches bill a hit at a
 fraction of the input rate, but they match prefixes only. Content that repeats
 in the middle of a prompt is paid for at full rate on every call, and no
