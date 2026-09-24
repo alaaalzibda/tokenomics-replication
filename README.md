@@ -552,9 +552,12 @@ about money:
 ### What this section does not claim
 
 * The reordering figures above are an **upper bound** computed from where
-  repeated tokens sit, not a measured saving from an implemented change. The
-  obvious next experiment is to implement the reordering in ChatDev and measure
-  whether the predicted shift from uncacheable to cacheable actually occurs.
+  repeated tokens sit, not a measured saving. We implemented the reordering and
+  the predicted shift did not occur: stranding rose from 35.8% to 40.7%
+  ([docs/EXPERIMENT-reordering.md](docs/EXPERIMENT-reordering.md)). The ceiling
+  is therefore still unreached, and the next thing to try is a reordering driven
+  by how often each section's *rendered value* changes across the run, rather
+  than by template syntax.
 * Ten tasks, one framework, one model, one run each.
 * ProgramDev tasks are small. Redundancy plausibly rises with project size, so
   these figures are more likely a floor than a ceiling.
