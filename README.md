@@ -232,9 +232,9 @@ default, because the paper reports the parameter is unsupported on
 | TheCrossword | 83.2% | 45.6% | 37.5% |
 | TicTacToe | 82.5% | 55.1% | 27.4% |
 | Gomoku | 79.8% | 54.8% | 25.1% |
-| **mean** | **79.7%** | **45.1%** | **34.7%** |
-| sd | 5.0 | 7.1 | 7.3 |
-| range | 67.9–84.6 | 29.6–55.1 | 23.7–45.9 |
+| **mean of 10 tasks** | **79.7%** | **45.1%** | **34.7%** |
+| sd across tasks | 5.0 | 7.1 | 7.3 |
+| range across tasks | 67.9–84.6 | 29.6–55.1 | 23.7–45.9 |
 
 Tokenizer: `tiktoken` `o200k_base`.
 
