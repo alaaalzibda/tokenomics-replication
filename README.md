@@ -178,7 +178,13 @@ the expensive part. It is fixed in `trace.py` and `aggregate.py`, and
 ## Results
 
 **10 of the 30 ProgramDev tasks, 162 LLM calls, `qwen2.5-coder:7b` via Ollama,
-one run per task.** Every task completed; none failed.
+one run per task, temperature 0.2.** Every task completed; none failed.
+
+Temperature was not chosen: ChatDev constructs `ChatGPTConfig()` with no
+arguments, so CAMEL's default of 0.2 applied. Running the framework unmodified
+was the point, so it was left alone. The original ran at 1.0, the OpenAI
+default, because the paper reports the parameter is unsupported on
+`gpt-5-2025-08-07`.
 
 ### RQ2 — context redundancy (the new measurement)
 
@@ -282,8 +288,9 @@ central qualitative claim and it survives. But at 42.6% rather than 59.4%, with
 Testing far larger than reported.
 
 **This is not a controlled test of their 59.4%, and should not be read as one.**
-Three things differ at once — the model, the ChatDev version, and the number of
-tasks — so no difference can be attributed to any one of them. A clean test of
+Four things differ at once — the model, the ChatDev version, the number of
+tasks, and the sampling temperature (0.2 here against 1.0 there) — so no
+difference can be attributed to any one of them. A clean test of
 model dependence requires running the same framework and corpus on a second
 model, changing nothing else. That has not been done.
 
@@ -296,6 +303,9 @@ Review and Testing do not. Code Completion is rare in both — it triggered in
 
 * One run per task on our side. No variance estimate within a task.
 * 10 of 30 tasks.
+* Temperature 0.2, inherited from ChatDev's default, against 1.0 in the
+  original. Low temperature makes our single run more stable than theirs, but
+  it is a fourth uncontrolled difference in the comparison above.
 
 ## What a development team can do with this
 
