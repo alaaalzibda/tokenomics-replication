@@ -196,3 +196,68 @@ Whether a *correct* reordering — one that puts genuinely run-constant text
 first, across phases as well as within them — recovers the stranded share. That
 is the next experiment, and it needs the prompt templates rebuilt around a
 shared run-constant header rather than the halves swapped.
+
+## The next experiment, specified
+
+The failed run swapped two halves. The correct version is a three-way sort, and
+it is a smaller edit than the one that failed.
+
+### The three tiers
+
+Derive them from the traces, not from the templates. Log each prompt section's
+rendered value on every call of one baseline run, then count distinct values:
+
+| Distinct rendered values | Tier | ChatDev examples |
+|---|---|---|
+| 1 across the whole run | 1 | `{task}`, `{modality}`, `{language}` |
+| 1 within each phase | 2 | `{assistant_role}`, the phase instruction block |
+| more than one per phase | 3 | `{codes}`, test reports, error summaries |
+
+This is what the volatility list should have been. It puts `{task}` in tier 1
+on the evidence rather than needing a hardcoded exception, and it is the only
+step of the design that requires anything to be measured.
+
+### What actually moves
+
+ChatDev already emits tier 1 first, so that part is left alone. The problem is
+tier 2 sitting *behind* tier 3:
+
+```
+current   1  task / modality / language     tier 1   already first
+          2  Codes: {codes}                 tier 3
+          3  the long instruction block     tier 2   <- billed in full
+
+proposed  1  task / modality / language     tier 1   unchanged
+          2  the long instruction block     tier 2   moved up
+          3  Codes: {codes}                 tier 3   moved down
+```
+
+The instruction never changes within a phase, but behind `{codes}` the prefix
+match dies as soon as two calls carry different code, and everything below it
+is uncacheable. Moving it above the code keeps the cross-phase shared opening
+that the previous attempt destroyed, and rescues the instruction as well.
+
+### Registered prediction
+
+1. **Redundancy stays flat.** The same text is sent; only its order changes.
+   Baseline 81.1%.
+2. **Uncacheable falls**, where the previous attempt raised it from 35.8% to
+   40.7%.
+3. **The drop is largest where the instruction tail is longest**: Documentation
+   (`Manual`, ~1,383 chars, 71.3% uncacheable at baseline), then Code Review
+   (`CodeReviewComment`, ~795 chars, 31.9%), then Coding (~940 chars, 20.2%).
+4. **Code Completion moves least**, having few calls of its own either way — the
+   opposite of the previous attempt, where it moved most (8.8% to 32.8%).
+
+**What would falsify this:** uncacheable flat or rising again, or the
+improvement appearing in stages with short instruction tails.
+
+### Confounds, stated in advance
+
+* Reordering is not semantically neutral even with identical content; compare
+  shares, not totals.
+* The same single-run-per-task limit applies, so a difference of a few points
+  is inside the noise this design resolves.
+* Directional words ("listed above") need the same treatment and logging as
+  before.
+* No quality measurement. A cost win that degrades the software is not a win.
