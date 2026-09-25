@@ -49,6 +49,42 @@ improvement appearing in stages with small static tails rather than large ones.
   good software is not tested here, and a cost win that degrades output is not
   a win. This is the obvious next experiment.
 
+## What the script actually does, on six lines
+
+A line counts as volatile if it contains a placeholder from a fixed list
+(`task`, `codes`, `ideas`, `modality`, `language`, `requirements`, the
+test-report names). `{assistant_role}` is the one exception, treated as stable
+because it is fixed within a phase.
+
+The script then finds the LAST volatile line, cuts there, and swaps the halves:
+
+```
+1  Task: {task}                          volatile
+2  Language: {language}                  volatile
+3  Codes: {codes}                        volatile   <- last volatile line
+4  You are a reviewer.                   stable
+5  Follow the coding standards below.    stable
+6  Report bugs one per line.             stable
+```
+
+`head` = lines 1-3, `tail` = lines 4-6, and the output is `tail + head`:
+
+```
+1  You are a reviewer.
+2  Follow the coding standards below.
+3  Report bugs one per line.
+4  Task: {task}
+5  Language: {language}
+6  Codes: {codes}
+```
+
+The failure is visible in that output. `{task}` and `{language}` render to the
+same values on every call of the run, so they were the most widely shared text
+in the prompt, and the swap moved them to the bottom where no prefix cache
+reaches them. The exception already made for `{assistant_role}` is exactly the
+right reasoning; it was simply not applied to the placeholders that are stable
+across the whole run rather than within one phase.
+
 ## Method
 
 ```bash
